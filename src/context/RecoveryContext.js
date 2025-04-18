@@ -11,7 +11,10 @@ export const useRecovery = () => {
 };
 
 export const RecoveryProvider = ({ children }) => {
-  const [recoveredLoans, setRecoveredLoans] = useState([]);
+  const [recoveredLoans, setRecoveredLoans] = useState(() => {
+    const saved = localStorage.getItem('recoveredLoans');
+    return saved ? JSON.parse(saved) : [];
+  });
   const [recoveryStats, setRecoveryStats] = useState({
     totalRecovered: 0,
     totalPending: 0,
@@ -20,21 +23,25 @@ export const RecoveryProvider = ({ children }) => {
   });
 
   const addRecoveredLoan = (loan) => {
-    setRecoveredLoans(prev => [...prev, loan]);
-    updateRecoveryStats([...recoveredLoans, loan]);
+    setRecoveredLoans(prev => {
+      const updated = [...prev, loan];
+      localStorage.setItem('recoveredLoans', JSON.stringify(updated));
+      updateRecoveryStats(updated);
+      return updated;
+    });
   };
 
   const removeRecoveredLoan = (loanId) => {
-    setRecoveredLoans(prev => prev.filter(loan => 
-      (loan.SR_NO !== loanId) && 
-      (loan.customerId !== loanId) && 
-      (loan._id !== loanId)
-    ));
-    updateRecoveryStats(recoveredLoans.filter(loan => 
-      (loan.SR_NO !== loanId) && 
-      (loan.customerId !== loanId) && 
-      (loan._id !== loanId)
-    ));
+    setRecoveredLoans(prev => {
+      const updated = prev.filter(loan => 
+        (loan.SR_NO !== loanId) && 
+        (loan.customerId !== loanId) && 
+        (loan._id !== loanId)
+      );
+      localStorage.setItem('recoveredLoans', JSON.stringify(updated));
+      updateRecoveryStats(updated);
+      return updated;
+    });
   };
 
   const updateRecoveryStats = (currentRecoveredLoans) => {
@@ -65,6 +72,11 @@ export const RecoveryProvider = ({ children }) => {
       pendingCases: allLoans.length - prev.recoveredCases
     }));
   };
+
+  // Keep stats updated if recoveredLoans changes (e.g. on reload)
+  React.useEffect(() => {
+    updateRecoveryStats(recoveredLoans);
+  }, [recoveredLoans]);
 
   return (
     <RecoveryContext.Provider value={{

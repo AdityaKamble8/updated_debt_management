@@ -29,11 +29,13 @@ mongoose.connect(process.env.MONGODB_URI)
 // Import routes
 const authRoutes = require('./routes/auth.routes');
 const customerRoutes = require('./routes/customer.routes');
+const customerLocationRoutes = require('./routes/customer.location');
 const recoveryRoutes = require('./routes/recovery.routes');
 
 // Use routes
 app.use('/api/auth', authRoutes);
 app.use('/api/customers', customerRoutes);
+app.use('/api/customers', customerLocationRoutes);
 app.use('/api/recovery', recoveryRoutes);
 
 // Error handling middleware

@@ -42,13 +42,17 @@ router.post('/bulk', protect, authorize('admin', 'manager'), async (req, res) =>
     const successEntries = [];
 
     // Try to upsert each customer individually to catch per-entry errors
+    const createdCustomerIds = [];
     for (const customer of processedData) {
       try {
-        await Customer.updateOne(
+        const result = await Customer.findOneAndUpdate(
           { customerId: customer.customerId },
           customer,
-          { upsert: true, runValidators: true }
+          { upsert: true, runValidators: true, new: true, setDefaultsOnInsert: true }
         );
+        if (result && result._id) {
+          createdCustomerIds.push(result._id);
+        }
         successEntries.push(customer);
       } catch (err) {
         let reason = err.message || 'Unknown error';
@@ -64,13 +68,15 @@ router.post('/bulk', protect, authorize('admin', 'manager'), async (req, res) =>
         message: 'Some entries were not processed due to errors',
         failedEntries,
         successCount: successEntries.length,
-        failedCount: failedEntries.length
+        failedCount: failedEntries.length,
+        customerIds: createdCustomerIds
       });
     }
 
     return res.status(201).json({
       message: 'All customers processed successfully',
-      successCount: successEntries.length
+      successCount: successEntries.length,
+      customerIds: createdCustomerIds
     });
   } catch (err) {
     console.error('Error in bulk customer operation:', err);

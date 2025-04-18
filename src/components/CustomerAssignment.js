@@ -559,6 +559,10 @@ const CustomerAssignment = () => {
                             <Typography variant="body2" component="span">
                               Branch: {customer.branch} | Outstanding: ₹{customer.outstandingBalance.toLocaleString()}
                             </Typography>
+                            <br />
+                            <Typography variant="body2" component="span">
+                              Assigned To: {customer.assignedTo && users.find(u => u._id === customer.assignedTo)?.username ? users.find(u => u._id === customer.assignedTo)?.username : 'Unassigned'}
+                            </Typography>
                           </>
                         }
                       />
